@@ -20,7 +20,7 @@ if __name__ == "__main__":
         "falcon": "./models/falcon/falcon-7b-instruct"
     }
     
-    model_path = model_path_dicts[args.models]
+    model_path = model_path_dicts[args.model]
     template_name = args.model
     
     adv_string_init = open(args.init_prompt_path, 'r').readlines()
