@@ -33,3 +33,6 @@ if __name__ == "__main__":
     num_points = args.num_points
     mutation = args.mutation
     API_key = args.API_key
+    
+    import pdb
+    pdb.set_trace()
