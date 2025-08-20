@@ -1,6 +1,14 @@
 from utils import get_args, load_model_and_tokenizer, load_conversation_template
+from log import log_init
+
+from tqdm import tqdm 
+
+import time
+
+import torch
 
 import pandas as pd
+import torch.nn as nn
 
 
 
@@ -91,6 +99,36 @@ if __name__ == "__main__":
     dataset = zip(harmful_data.goal[args.start:], harmful_data.target[args.start:])
     infos = {}
     
+    ###
     
-    import pdb
-    pdb.set_trace()
+    crit = nn.CrossEntropyLoss(reduction='mean')
+
+    prefix_string_init = None
+    for i, (g, t) in tqdm(
+        enumerate(dataset), 
+        total=len(harmful_data.goal[args.start:])
+    ):
+        reference = torch.load(
+            'assets/prompt_group.pth', 
+            map_location='cpu'
+        )
+        
+        log = log_init()
+        info = {
+            "goal": "", 
+            "target": "", 
+            "final_suffix": "",
+            "final_respond": "", 
+            "total_time": 0, 
+            "is_success": False, 
+            "log": log
+        }
+        info["goal"] = info["goal"].join(g)
+        info["target"] = info["target"].join(t)
+        
+        start_time = time.time()
+        user_prompt = g
+        target = t
+    
+        import pdb
+        pdb.set_trace()
