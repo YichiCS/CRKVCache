@@ -1,4 +1,11 @@
+
+
 import argparse
+
+import torch
+
+from fastchat import model
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 def get_args():
@@ -20,3 +27,48 @@ def get_args():
 
     args = parser.parse_args()
     return args
+
+def load_model_and_tokenizer(model_path, tokenizer_path=None, device='cuda:0', **kwargs):
+    model = AutoModelForCausalLM.from_pretrained(
+        model_path,
+        torch_dtype=torch.float16,
+        trust_remote_code=True,
+        **kwargs
+    ).to(device).eval()
+
+    tokenizer_path = model_path if tokenizer_path is None else tokenizer_path
+
+    tokenizer = AutoTokenizer.from_pretrained(
+        tokenizer_path,
+        trust_remote_code=True,
+        use_fast=False
+    )
+
+    if 'oasst-sft-6-llama-30b' in tokenizer_path:
+        tokenizer.bos_token_id = 1
+        tokenizer.unk_token_id = 0
+    if 'guanaco' in tokenizer_path:
+        tokenizer.eos_token_id = 2
+        tokenizer.unk_token_id = 0
+    if 'llama-2' in tokenizer_path:
+        tokenizer.pad_token = tokenizer.unk_token
+        tokenizer.padding_side = 'left'
+    if 'falcon' in tokenizer_path:
+        tokenizer.padding_side = 'left'
+    if not tokenizer.pad_token:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    return model, tokenizer
+
+
+def load_conversation_template(template_name):
+    if template_name == 'llama2':
+        template_name = 'llama-2'
+    conv_template = model.get_conversation_template(template_name)
+    if conv_template.name == 'zero_shot':
+        conv_template.roles = tuple(['### ' + r for r in conv_template.roles])
+        conv_template.sep = '\n'
+    elif conv_template.name == 'llama-2':
+        conv_template.sep2 = conv_template.sep2.strip()
+        conv_template.system = "[INST] <<SYS>>\n\n<</SYS>>\n\n"
+    return conv_template
