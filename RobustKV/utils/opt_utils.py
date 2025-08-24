@@ -17,7 +17,7 @@ import sys
 import time
 from collections import Counter
 
-def forward(*, model, input_ids, attention_mask, batch_size=512, target = None):
+def _forward(*, model, input_ids, attention_mask, batch_size=512, target = None):
     logits = []
     for i in range(0, input_ids.shape[0], batch_size):
 
@@ -27,16 +27,21 @@ def forward(*, model, input_ids, attention_mask, batch_size=512, target = None):
         else:
             batch_attention_mask = None
 
-        outputs = model(
-          input_ids=batch_input_ids,
-          attention_mask=batch_attention_mask,
-          past_key_values=None,
-          use_cache=True,
-          )
-        past_key_values = outputs.past_key_values
+        with torch.no_grad():
+            outputs = model(
+                input_ids=batch_input_ids,
+                attention_mask=batch_attention_mask,
+                past_key_values=None,
+                use_cache=True,
+            )
+            past_key_values = outputs.past_key_values
 
 
-        logits.append(model(input_ids=batch_input_ids, past_key_values = past_key_values, attention_mask=batch_attention_mask).logits)
+        logits.append(model(
+            input_ids=batch_input_ids, 
+            past_key_values=past_key_values, 
+            attention_mask=batch_attention_mask
+        ).logits)
 
         gc.collect()
 
