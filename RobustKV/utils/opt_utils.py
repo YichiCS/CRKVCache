@@ -467,14 +467,14 @@ def get_score_autodan(tokenizer, conv_template, instruction, target, model, devi
         #print(input_ids.size())
         empty = torch.tensor([])
         torch.save(empty,"indices4.pt")
-        model.prepare_inputs_for_generation(input_ids=None)
+        # model.prepare_inputs_for_generation(input_ids=None)
         marker = tokenizer("[/INST]",return_tensors="pt").input_ids[0][1:5]
         my_ids = remove_after_pattern(input_ids.cpu(), marker.cpu())
-        cache_outputs = model(
-            input_ids= my_ids.unsqueeze(0).to(device),
-            past_key_values=None,
-            use_cache=True,
-            )
+        # cache_outputs = model(
+        #     input_ids= my_ids.unsqueeze(0).to(device),
+        #     past_key_values=None,
+        #     use_cache=True,
+        #     )
         my_indices = torch.load("indices4.pt")
         ranked_indices = rank_indices(my_indices.cpu().numpy())
         eviction_index = []
