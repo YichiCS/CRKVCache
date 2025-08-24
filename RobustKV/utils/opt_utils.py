@@ -17,7 +17,7 @@ import sys
 import time
 from collections import Counter
 
-def _forward(*, model, input_ids, attention_mask, batch_size=512, target = None):
+def forward(*, model, input_ids, attention_mask, batch_size=512, target = None):
     logits = []
     for i in range(0, input_ids.shape[0], batch_size):
 
