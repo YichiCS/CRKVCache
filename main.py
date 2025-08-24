@@ -1,6 +1,9 @@
 from utils import get_args, load_model_and_tokenizer, load_conversation_template, get_developer
+from attack.autodan import AutoDanSuffixManager
 from log import log_init
 
+import os
+import json
 from tqdm import tqdm 
 
 import time
@@ -141,6 +144,8 @@ if __name__ == "__main__":
         # TODO: pack this part to attack
         
         from attack.autodan import AutoDAN
+        from attack.autodan import autodan_sample_control, autodan_sample_control_hga
+        from utils import *
         
         attack = AutoDAN()
         
@@ -157,8 +162,8 @@ if __name__ == "__main__":
                 )
                 score_list = losses.cpu().numpy().tolist()
                 
-                import pdb
-                pdb.set_trace()
+                # import pdb
+                # pdb.set_trace()
 
                 best_new_adv_suffix_id = losses.argmin()
                 best_new_adv_suffix = new_adv_suffixs[best_new_adv_suffix_id]
@@ -169,7 +174,7 @@ if __name__ == "__main__":
                     best_new_adv_suffix = prefix_string_init + best_new_adv_suffix
                 adv_suffix = best_new_adv_suffix
 
-                suffix_manager = autodan_SuffixManager(
+                suffix_manager = AutoDanSuffixManager(
                     tokenizer=tokenizer,
                     conv_template=conv_template,
                     instruction=user_prompt,
@@ -224,9 +229,33 @@ if __name__ == "__main__":
                     f"Current Suffix:\n{best_new_adv_suffix}\n"
                     f"Current Response:\n{gen_str}\n"
                     "################################\n")
+                info["log"]["time"].append(epoch_cost_time)
+                info["log"]["loss"].append(current_loss.item())
+                info["log"]["suffix"].append(best_new_adv_suffix)
+                info["log"]["respond"].append(gen_str)
+                info["log"]["success"].append(is_success)
 
+                last_loss = current_loss.item()
+
+                if is_success:
+                    break
+                gc.collect()
+                torch.cuda.empty_cache()
+        end_time = time.time()
+        cost_time = round(end_time - start_time, 2)
+        info["total_time"] = cost_time
+        info["final_suffix"] = adv_suffix
+        info["final_respond"] = gen_str
+        info["is_success"] = is_success
+        info["final_prompt"] = suffix_manager.get_prompt(adv_string=adv_suffix)
+
+        infos[i + args.start] = info
+        if not os.path.exists('./results/autodan_hga'):
+            os.makedirs('./results/autodan_hga')
+        with open(f'./results/autodan_hga/{args.model}_{args.start}_{args.save_suffix}.json', 'w') as json_file:
+            json.dump(infos, json_file)
     
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         
         
