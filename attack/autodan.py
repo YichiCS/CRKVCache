@@ -154,7 +154,7 @@ class AutoDanSuffixManager:
             encoding.char_to_token(prompt.find(self.target) + len(self.target)) - 1
         )
 
-    def get_input_ids(self, adv_string=None, model=None):
+    def get_input_ids(self, adv_string=None):
         """
         根据prompt生成input_ids。
 
@@ -165,6 +165,8 @@ class AutoDanSuffixManager:
         返回:
             input_ids: torch.Tensor，直到target_slice结束的输入序列
         """
+        import pdb
+        pdb.set_trace()
         suffix = adv_string + self.ANSWER_SUFFIX if adv_string else self.adv_string
         prompt = self.get_prompt(adv_string=suffix)
         toks = self.tokenizer(prompt).input_ids
@@ -225,7 +227,7 @@ class AutoDAN():
                 target=target,
                 adv_string=adv_suffix,
             )
-            input_ids = suffix_manager.get_input_ids(adv_string=adv_suffix, model=model).to(device)
+            input_ids = suffix_manager.get_input_ids(adv_string=adv_suffix).to(device)
             
             import pdb
             pdb.set_trace()
