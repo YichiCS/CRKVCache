@@ -2,6 +2,9 @@ import gc
 
 import torch
 
+from utils import rank_indices, forward
+
+
 class AutoDanSuffixManager:
     """
     自动化对抗攻击后缀管理器，用于构建输入prompt和计算各部分token位置(slice)。
@@ -53,7 +56,6 @@ class AutoDanSuffixManager:
         prompt = self.conv_template.get_prompt()
 
         encoding = self.tokenizer(prompt)
-        toks = encoding.input_ids
 
         # === llama-2 模板处理逻辑 ===
         if self.conv_template.name == 'llama-2':
@@ -165,8 +167,6 @@ class AutoDanSuffixManager:
         返回:
             input_ids: torch.Tensor，直到target_slice结束的输入序列
         """
-        import pdb
-        pdb.set_trace()
         suffix = adv_string + self.ANSWER_SUFFIX if adv_string else self.adv_string
         prompt = self.get_prompt(adv_string=suffix)
         toks = self.tokenizer(prompt).input_ids

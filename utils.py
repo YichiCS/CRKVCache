@@ -1,10 +1,11 @@
-
+import gc
 
 import argparse
 
 import torch
 
 from fastchat import model
+from collections import Counter
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
@@ -90,3 +91,92 @@ def load_conversation_template(template_name):
         conv_template.sep2 = conv_template.sep2.strip()
         conv_template.system = "[INST] <<SYS>>\n\n<</SYS>>\n\n"
     return conv_template
+
+
+def add_ranks(sorted_indices):
+    ranked_indices = [(index, frequency, rank+1) for rank, (index, frequency) in enumerate(sorted(sorted_indices, key=lambda x: x[1]))]
+    
+    return ranked_indices
+
+def rank_indices(tensor):
+    flat_tensor = tensor.flatten()
+    counter = Counter(flat_tensor)
+    
+    sorted_indices = sorted(counter.items(), key=lambda x: x[1], reverse=True)
+    
+    return add_ranks(sorted_indices)
+
+def forward(
+    *, 
+    model, 
+    input_ids, 
+    attention_mask=None, 
+    batch_size=512, 
+    target=None
+):
+    """
+    Run the model forward pass in batches.
+
+    Args:
+        model: The model to use for inference.
+        input_ids (torch.Tensor): Tensor of token IDs (shape: [N, seq_len]).
+        attention_mask (torch.Tensor, optional): Attention mask tensor.
+        batch_size (int, optional): Number of samples per batch. Default is 512.
+        target: Optional labels for loss calculation (not used yet).
+
+    Returns:
+        torch.Tensor: Concatenated logits from all batches.
+    """
+    logits_list = []
+    n_samples = input_ids.size(0)
+
+    for start in range(0, n_samples, batch_size):
+        end = start + batch_size
+        batch_input_ids = input_ids[start:end]
+        batch_attention_mask = (
+            attention_mask[start:end] if attention_mask is not None else None
+        )
+        
+        outputs = model(
+            input_ids=batch_input_ids,
+            attention_mask=batch_attention_mask,
+            use_cache=True
+        )
+        logits_list.append(outputs.logits)
+
+        del batch_input_ids, batch_attention_mask, outputs
+        gc.collect()
+
+    return torch.cat(logits_list, dim=0)
+
+
+def _forward(*, model, input_ids, attention_mask, batch_size=512, target = None):
+    logits = []
+    for i in range(0, input_ids.shape[0], batch_size):
+
+        batch_input_ids = input_ids[i:i + batch_size]
+        if attention_mask is not None:
+            batch_attention_mask = attention_mask[i:i + batch_size]
+        else:
+            batch_attention_mask = None
+
+        outputs = model(
+          input_ids=batch_input_ids,
+          attention_mask=batch_attention_mask,
+          past_key_values=None,
+          use_cache=True,
+          )
+        past_key_values = outputs.past_key_values
+
+
+        logits.append(model(
+            input_ids=batch_input_ids, 
+            past_key_values=past_key_values, 
+            attention_mask=batch_attention_mask
+        ).logits)
+
+        gc.collect()
+
+    del batch_input_ids, batch_attention_mask
+
+    return torch.cat(logits, dim=0)
