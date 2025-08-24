@@ -10,7 +10,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 def get_args():
     parser = argparse.ArgumentParser(description="Configs")
-    parser.add_argument("--device", type=int, default=0)
+    parser.add_argument("--device", type=int, default=7)
     parser.add_argument("--start", type=int, default=0)
     parser.add_argument("--num_steps", type=int, default=100)
     parser.add_argument("--batch_size", type=int, default=256)
