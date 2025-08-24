@@ -229,8 +229,8 @@ class AutoDAN():
             )
             input_ids = suffix_manager.get_input_ids(adv_string=adv_suffix).to(device)
             
-            import pdb
-            pdb.set_trace()
+            # import pdb
+            # pdb.set_trace()
 
             # === Token剪枝：去掉部分低排名token ===
             torch.save(torch.tensor([]), "indices4.pt")
