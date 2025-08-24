@@ -1,8 +1,9 @@
-from utils import get_args, load_model_and_tokenizer, load_conversation_template, get_developer
+from utils import get_args, load_model_and_tokenizer, load_conversation_template, get_developer, check_for_attack_success
 from attack.autodan import AutoDanSuffixManager
 from log import log_init
 
 import os
+import gc
 import json
 from tqdm import tqdm 
 
@@ -145,7 +146,6 @@ if __name__ == "__main__":
         
         from attack.autodan import AutoDAN
         from attack.autodan import autodan_sample_control, autodan_sample_control_hga
-        from utils import *
         
         attack = AutoDAN()
         
