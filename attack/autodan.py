@@ -234,18 +234,18 @@ class AutoDAN():
 
             # === Token剪枝：去掉部分低排名token ===
             torch.save(torch.tensor([]), "indices4.pt")
-            model.prepare_inputs_for_generation(input_ids=None)
+            # model.prepare_inputs_for_generation(input_ids=None)
 
             marker = tokenizer("[/INST]", return_tensors="pt").input_ids[0][1:5]
             marker = marker.to(device).cpu()
 
             # 删除marker之后的token
             trimmed_ids = remove_after_pattern(input_ids.cpu(), marker)
-            cache_outputs = model(
-                input_ids=trimmed_ids.unsqueeze(0).to(device),
-                past_key_values=None,
-                use_cache=True,
-            )
+            # cache_outputs = model(
+            #     input_ids=trimmed_ids.unsqueeze(0).to(device),
+            #     past_key_values=None,
+            #     use_cache=True,
+            # )
 
             ranked_indices = rank_indices(torch.load("indices4.pt").cpu().numpy())
 
@@ -264,6 +264,9 @@ class AutoDAN():
             adjusted_start = suffix_manager._target_slice.start - num_tokens_to_remove
             adjusted_stop = suffix_manager._target_slice.stop - num_tokens_to_remove
             target_slices.append(slice(adjusted_start, adjusted_stop))
+            
+        import pdb
+        pdb.set_trace()
 
         # === Padding输入序列，组成batch ===
         pad_token_id = 0
