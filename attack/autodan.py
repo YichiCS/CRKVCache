@@ -184,6 +184,7 @@ class AutoDAN():
         pass
 
     def compute_loss(
+        self, 
         tokenizer,
         conv_template,
         instruction,
