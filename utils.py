@@ -28,7 +28,25 @@ def get_args():
     args = parser.parse_args()
     return args
 
-def load_model_and_tokenizer(model_path, tokenizer_path=None, device='cuda:0', **kwargs):
+
+def get_developer(model_name):
+    developer_dict = {
+        "llama2": "Meta", 
+        "vicuna": "LMSYS",
+        "guanaco": "TheBlokeAI", 
+        "WizardLM": "WizardLM",
+        "mpt-chat": "MosaicML", 
+        "mpt-instruct": "MosaicML", 
+        "falcon": "TII"
+    }
+    return developer_dict[model_name]
+
+def load_model_and_tokenizer(
+    model_path, 
+    tokenizer_path=None, 
+    device='cuda:0', 
+    **kwargs
+):
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
         torch_dtype=torch.float16,
