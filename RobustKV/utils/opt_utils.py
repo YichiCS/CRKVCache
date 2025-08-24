@@ -18,36 +18,23 @@ import time
 from collections import Counter
 
 def forward(*, model, input_ids, attention_mask, batch_size=512, target = None):
-    logits = []
+    logits_list = []
     for i in range(0, input_ids.shape[0], batch_size):
-
         batch_input_ids = input_ids[i:i + batch_size]
-        if attention_mask is not None:
-            batch_attention_mask = attention_mask[i:i + batch_size]
-        else:
-            batch_attention_mask = None
+        batch_attention_mask = attention_mask[i:i + batch_size] if attention_mask is not None else None
 
-        with torch.no_grad():
-            outputs = model(
-                input_ids=batch_input_ids,
-                attention_mask=batch_attention_mask,
-                past_key_values=None,
-                use_cache=True,
-            )
-            past_key_values = outputs.past_key_values
+        outputs = model(
+            input_ids=batch_input_ids,
+            attention_mask=batch_attention_mask,
+            use_cache=True
+        )
 
+        logits_list.append(outputs.logits)
 
-        logits.append(model(
-            input_ids=batch_input_ids, 
-            past_key_values=past_key_values, 
-            attention_mask=batch_attention_mask
-        ).logits)
+        del batch_input_ids, batch_attention_mask, outputs
+        torch.cuda.empty_cache()  # 释放显存
 
-        gc.collect()
-
-    del batch_input_ids, batch_attention_mask
-
-    return torch.cat(logits, dim=0)
+    return torch.cat(logits_list, dim=0)
 
 
 def load_model_and_tokenizer(model_path, tokenizer_path=None, device='cuda:0', **kwargs):
