@@ -133,6 +133,8 @@ def check_for_attack_success(model, tokenizer, input_ids, assistant_role_slice, 
             .strip()
         )
         
+    # 
+        
     gen_str = generated_text
 
     #gen_str = tokenizer.decode(generate(model,tokenizer,input_ids,assistant_role_slice,gen_config=gen_config)).strip()
